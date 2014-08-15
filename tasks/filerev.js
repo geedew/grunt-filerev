@@ -2,7 +2,6 @@
 var crypto = require('crypto');
 var path = require('path');
 var fs = require('fs');
-var semver = require('semver');
 var chalk = require('chalk');
 var eachAsync = require('each-async');
 
@@ -15,16 +14,6 @@ module.exports = function (grunt) {
     });
     var target = this.target;
     var filerev = grunt.filerev || {summary: {}};
-    var replacement = '\ufffd';
-
-    // http://blog.nodejs.org/2014/06/16/openssl-and-breaking-utf-8-change/
-    // https://github.com/felixge/node-unicode-sanitize/blob/master/index.js
-    var loneSurrogates = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|([^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/g;
-    var useSanitation = (options.encoding === 'utf8' &&  !( typeof process.env.NODE_INVALID_UTF8 !== 'undefined' || semver.lt(process.version, '0.10.29') ) );
-    var sanitizeUtf8 = function(str) {
-      grunt.verbose.writeln('Sanitizing utf8');
-      return str.replace(loneSurrogates, '$1' + replacement);
-    };
 
     eachAsync(this.files, function (el, i, next) {
       var move = true;
@@ -55,12 +44,7 @@ module.exports = function (grunt) {
         }
 
         var dirname;
-        var fileSrc = grunt.file.read(file);
-
-        if( useSanitation ) {
-          fileSrc = sanitizeUtf8(fileSrc);
-        } 
-        var hash = crypto.createHash(options.algorithm).update(fileSrc, options.encoding).digest('hex');
+        var hash = crypto.createHash(options.algorithm).update(grunt.file.read(file), options.encoding).digest('hex');
         var suffix = hash.slice(0, options.length);
         var ext = path.extname(file);
         var newName = [path.basename(file, ext), suffix, ext.slice(1)].join('.');

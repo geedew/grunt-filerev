@@ -81,6 +81,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('checkSummary', 'Check that summary attribute is correctly created', function () {
     var src = path.normalize('test/fixtures/file.png');
-    assert.ok(grunt.filerev.summary[src]);
+    var expected = path.normalize('test/tmp/file.d01d8f48.png');
+    assert.equal(grunt.filerev.summary[src], expected);
   });
 };
